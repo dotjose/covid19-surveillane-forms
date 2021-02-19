@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect} from "react";
 import {
   Box,
   Grid,
@@ -9,70 +9,34 @@ import {
   IconButton,
   Button,
   Slide,
-  Switch,
   Dialog,
   List,
   ListItem,
   ListItemSecondaryAction,
-  makeStyles
 } from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
 import {
   renderField
 } from "../form/form-util";
-import { isEmpty, cloneDeep } from "lodash";
-import { green, red, grey, teal, amber } from "@material-ui/core/colors";
+import PortOfEntryInitialState from "./PortOfEntryInitialState"
+import { isEmpty} from "lodash";
+import {UNDERLYING} from "../../constants/common";
+import PORT_OF_ENTRY_FIELDS from "../../constants/PortOfEntry-fields"
 import ReCAPTCHA from "react-google-recaptcha";
 import DependantsForm from "../dependents/DependentsForm";
-import {
-  nameValidator,
-  ageValidator,
-  emailValidator,
-  nameMaxLengthValidator,
-} from "../../validation/form/portOfEntry";
+
 import config from '../../config';
 
 const TEST_SITE_KEY = config.captchaKey;
-
-const underlying = [
-  "chronicLungDisease",
-  "heartDisease",
-  "liverDisease",
-  "renalDisease",
-  "autoimmuneDisease",
-  "cancer",
-  "diabetes",
-  "hiv",
-  "pregnancy",
-]
-
-
-const useStyles = makeStyles((theme) => ({
-  appBar: {
-    position: 'relative',
-  },
-  title: {
-    marginLeft: theme.spacing(2),
-    flex: 1,
-  },
-}));
-const HOTEL_KEYS = ['skylight', 'ghion', 'azzeman', 'sapphire', 'other'];
 const DELAY = 1500;
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-
-const SEX_VALUE = {
-  property: "gender",
-  female: "F",
-  male: "M",
-};
-
 const PortOfEntryForm = ({ onSubmit, lang }) => {
   const [formValues, setFormValues] = useState({
-    [SEX_VALUE.property]: SEX_VALUE.female,
+    ...PortOfEntryInitialState
   });
 
   const [open, setOpen] = useState(false);
@@ -99,237 +63,25 @@ const PortOfEntryForm = ({ onSubmit, lang }) => {
   };
 
   const handleFieldChange = (field) => (value) => {
-    if (underlying.includes(field)) {
+    if (UNDERLYING.includes(field)) {
       setFormValues({
         ...formValues,
         underlyingConditions: {
-           ...formValues.underlyingConditions,
-           [field] : value
+          ...formValues.underlyingConditions,
+          [field]: value
         },
       });
 
     } else {
       setFormValues({
         ...formValues,
-       [field]: value,
+        [field]: value,
       });
     }
   };
 
-  const fields = [
-    {
-      type: "text",
-      label: lang.t("firstName"),
-      property: "firstName",
-      focus: true,
-      onChange: handleFieldChange("firstName"),
-      onValidate: nameValidator.validate,
-      validationErrorMsg: lang.t(nameValidator.validationErrorMsg),
-    },
-    {
-      type: "text",
-      label: lang.t("middleName"),
-      property: "middleName",
-      onChange: handleFieldChange("middleName"),
-      onValidate: nameMaxLengthValidator.validate,
-      validationErrorMsg: lang.t(nameMaxLengthValidator.validationErrorMsg),
-    },
-    {
-      type: "text",
-      label: lang.t("lastName"),
-      property: "lastName",
-      onChange: handleFieldChange("lastName"),
-      onValidate: nameValidator.validate,
-      validationErrorMsg: lang.t(nameValidator.validationErrorMsg),
-    },
-    {
-      type: "text",
-      label: lang.t("email"),
-      property: "email",
-      onChange: handleFieldChange("email"),
-      onValidate: emailValidator.validate,
-      validationErrorMsg: lang.t(emailValidator.validationErrorMsg),
-    },
-    {
-      type: "text",
-      label: lang.t("age"),
-      property: "age",
-      onChange: handleFieldChange("age"),
-      onValidate: ageValidator.validate,
-      validationErrorMsg: lang.t(ageValidator.validationErrorMsg),
-    },
-    {
-      type: "select",
-      label: lang.t("sex.label"),
-      property: SEX_VALUE.property,
-      onChange: handleFieldChange(SEX_VALUE.property),
-      choices: [
-        { label: lang.t("sex.female"), value: SEX_VALUE.female },
-        { label: lang.t("sex.male"), value: SEX_VALUE.male },
-      ],
-    },
-    {
-      type: "select",
-      label: lang.t("nationality.label"),
-      property: "nationality",
-      onChange: handleFieldChange("nationality"),
-      choices: [
-        { label: lang.t("nationality.ethiopian"), value: "ET" }, //placeholder
-        { label: lang.t("nationality.other"), value: "other" },
-      ],
-    },
-    {
-      type: "text",
-      label: lang.t("passportNumber"),
-      property: "passportNo",
-      onChange: handleFieldChange("passportNo"),
-    },
-    {
-      type: "text",
-      label: lang.t("phoneNumber"),
-      property: "phoneNumber",
-      onChange: handleFieldChange("phoneNumber"),
-    },
-    {
-      type: "select",
-      label: lang.t("travelFrom"),
-      property: "travelFrom",
-      onChange: handleFieldChange("travelFrom"),
-      choices: [
-        { label: "country 1", value: "1" }, //placeholder
-        { label: "country 2", value: "2" },
-      ],
-    },
-    {
-      type: "select",
-      label: lang.t("transitFrom"),
-      property: "transitFrom",
-      onChange: handleFieldChange("transitFrom"),
-      choices: [
-        { label: "country 1", value: "1" }, //placeholder
-        { label: "country 2", value: "2" },
-      ],
-    },
-    {
-      type: "select",
-      label: lang.t("hotel.label"),
-      property: "hotelName",
-      onChange: handleFieldChange("hotelName"),
-      choices: HOTEL_KEYS.map((r) => ({
-        label: lang.t(`hotel.${r}`),
-        value: r,
-      })),
-    },
-    {
-      type: "text",
-      label: lang.t("seatNumber"),
-      property: "seatNumber",
-      onChange: handleFieldChange("seatNumber"),
-    },
-    {
-      type: "text",
-      label: lang.t("flightNumber"),
-      property: "flightNumber",
-      onChange: handleFieldChange("flightNumber"),
-    },
+  const fields = PORT_OF_ENTRY_FIELDS(lang, handleFieldChange);
 
-    {
-      type: "check",
-      label: lang.t("chronicLungDisease"),
-      property: "chronicLungDisease",
-      onChange: handleFieldChange("chronicLungDisease"),
-    },
-    {
-      type: "check",
-      label: lang.t("fever"),
-      property: "fever",
-      onChange: handleFieldChange("fever"),
-    },
-    {
-
-      type: 'check',
-      label: lang.t('fatigue'),
-      property: 'fatigue',
-      onChange: handleFieldChange('fatigue')
-    },
-    {
-      type: 'check',
-      label: lang.t('cough'),
-      property: 'cough',
-      onChange: handleFieldChange('cough')
-    },
-    {
-      type: 'check',
-      label: lang.t('shortnessOfBreath'),
-      property: 'shortnessOfBreath',
-      onChange: handleFieldChange('shortnessOfBreath')
-    },
-    {
-      type: "check",
-      label: lang.t("heartDisease"),
-      property: "heartDisease",
-      onChange: handleFieldChange("heartDisease"),
-    },
-
-    {
-      type: "check",
-      label: lang.t("liverDisease"),
-      property: "liverDisease",
-      onChange: handleFieldChange("liverDisease"),
-    },
-    {
-      type: "check",
-      label: lang.t("renalDisease"),
-      property: "renalDisease",
-      onChange: handleFieldChange("renalDisease"),
-    },
-
-    {
-      type: "check",
-      label: lang.t("autoimmuneDisease"),
-      property: "autoimmuneDisease",
-      onChange: handleFieldChange("autoimmuneDisease"),
-    },
-
-    {
-      type: "check",
-      label: lang.t("cancer"),
-      property: "cancer",
-      onChange: handleFieldChange("cancer"),
-    },
-
-    {
-      type: "check",
-      label: lang.t("diabetes"),
-      property: "diabetes",
-      onChange: handleFieldChange("diabetes"),
-    },
-
-
-    {
-      type: "check",
-      label: lang.t("hiv"),
-      property: "hiv",
-      onChange: handleFieldChange("hiv"),
-    },
-
-    {
-      type: "check",
-      label: lang.t("pregnancy"),
-      property: "pregnancy",
-      onChange: handleFieldChange("pregnancy"),
-      type: "check",
-      label: lang.t("cough"),
-      property: "cough",
-      onChange: handleFieldChange("cough"),
-    },
-    {
-      type: "check",
-      label: lang.t("shortnessOfBreath"),
-      property: "shortnessOfBreath",
-      onChange: handleFieldChange("shortnessOfBreath"),
-    },
-  ];
 
   const renderFormField = (property) => {
     const field = fields.find((f) => f.property === property);
@@ -347,7 +99,7 @@ const PortOfEntryForm = ({ onSubmit, lang }) => {
 
   const renderSubsectionheader = (label) => {
     return (
-        <Typography className="subsectionheader" variant="h5">{label}</Typography>
+      <Typography className="subsectionheader" variant="h5">{label}</Typography>
     );
   };
 
@@ -370,7 +122,7 @@ const PortOfEntryForm = ({ onSubmit, lang }) => {
 
   const isFormValid = () => {
     let isValid = true;
-    if(!isEmpty(captchaText) && !isCaptchaExpired) {
+    if (!isEmpty(captchaText) && !isCaptchaExpired) {
       fields.forEach((f) => {
         if (f.onValidate) {
           isValid = isValid && f.onValidate(formValues[f.property]);
@@ -408,7 +160,7 @@ const PortOfEntryForm = ({ onSubmit, lang }) => {
             {renderFormField("lastName")}
           </Grid>
           <Grid item xs={12} md={4}>
-            {renderFormField("gender")}
+            {renderFormField("sex")}
           </Grid>
           <Grid item xs={12} md={4}>
             {renderFormField("nationality")}
@@ -425,6 +177,14 @@ const PortOfEntryForm = ({ onSubmit, lang }) => {
           <Grid item xs={12} md={4}>
             {renderFormField("email")}
           </Grid>
+          <Grid item xs={12} md={4}>
+            {renderFormField("occupation")}
+          </Grid>
+          {formValues.occupation === "other" &&
+            <Grid item xs={12} md={4}>
+             {renderFormField("occupationOther")}
+            </Grid>
+          }
         </Grid>
 
         {renderSubsectionheader("Travel Info")}
@@ -444,6 +204,12 @@ const PortOfEntryForm = ({ onSubmit, lang }) => {
           <Grid item xs={12} md={3}>
             {renderFormField("hotelName")}
           </Grid>
+          {formValues.hotelName === "other" ?
+            <Grid item xs={12} md={4}>
+              {renderFormField("hotelOther")}
+            </Grid> : ""
+
+          }
         </Grid>
 
         <Grid container spacing={4}>
